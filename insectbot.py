@@ -4,6 +4,8 @@ from uiflow import *
 import hat
 import unit
 import time
+import wifiCfg
+from m5mqtt import M5mqtt
 
 
 class Insect:
@@ -14,8 +16,11 @@ class Insect:
         self.leg_right_back = None
         self.curr_leg = None  # Current moving leg
         self.state = 'STILL'
+        self.remote_ctrl = ''  # Remote control from MQTT
 
         self._label_distance = M5TextBox(25, 35, '', lcd.FONT_DejaVu40, 0xFFFFFF, rotate=0)
+        self._label_wifi = M5TextBox(25, 85, 'WiFi...', lcd.FONT_DejaVu40, 0xFFFFFF, rotate=0)
+        self._label_mqtt = M5TextBox(25, 135, 'MQTT...', lcd.FONT_DejaVu40, 0xFFFFFF, rotate=0)
         self._tof = unit.get(unit.TOF, unit.PORTA)
 
     def show_distance(self):
@@ -295,6 +300,25 @@ class Leg:
 
 insect = Insect()
 
+# Connect WiFi
+for retry in range(3):
+    if wifiCfg.wlan_sta.isconnected():
+        insect._label_wifi.setText('WiFi OK')
+        break
+else:
+    insect._label_wifi.setText('No WiFi')
+
+
+# MQTT callback function
+def mqtt_callback(topic_data):
+    insect.remote_ctrl = topic_data
+    insect._label_mqtt.setText(topic_data)
+
+
+m5mqtt = M5mqtt('insectbot', 'broker-cn.emqx.io', 1883, '', '', 300)
+m5mqtt.subscribe(str('insect'), mqtt_callback)
+m5mqtt.start()
+
 # Calibrate all legs
 insect.leg_left_back = Leg(1, 48, 2, 73)
 insect.leg_left_front = Leg(4, 134, 3, 100)
@@ -303,15 +327,21 @@ insect.leg_right_front = Leg(8, 49, 7, 77)
 
 insect.reset()
 
-setScreenColor(0x111155)
+# setScreenColor(0x111155)
 
 # Infinite heart beats
-time.sleep(2)
 insect.state = 'MOVE_FORWARD'
 
-for pulse in range(2000):
+while True:
+    time.sleep_ms(1)
+
     if insect.is_still():
         insect.show_distance()
+
+    if insect.remote_ctrl == 's':
+        continue
+    elif insect.remote_ctrl == 'g':
+        pass
 
     if insect.state == 'MOVE_FORWARD':
         insect.move_forward()
@@ -334,4 +364,3 @@ for pulse in range(2000):
             else:
                 insect.state = 'MOVE_FORWARD'
 
-    time.sleep_ms(1)
