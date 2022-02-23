@@ -339,16 +339,21 @@ while True:
     if insect.is_still():
         insect.show_distance()
 
-    if insect.remote_ctrl == 's':
-        continue
-    elif insect.remote_ctrl == 'g':
+    # Control from remote
+    if insect.remote_ctrl == 'fwd':
+        insect.state = 'MOVE_FORWARD'
+    elif insect.remote_ctrl == 'bwd':
         pass
+    elif insect.remote_ctrl == 'left':
+        insect.state = 'TURN_LEFT'
+    elif insect.remote_ctrl == 'right':
+        insect.state = 'TURN_RIGHT'
 
+    # Move according to current state
     if insect.state == 'MOVE_FORWARD':
         insect.move_forward()
         if insect.is_still() and insect.is_too_close():
             insect.state = 'RESTORE'
-
     elif insect.state == 'RESTORE':
         insect.restore()
         if insect.is_init_pose():
@@ -356,7 +361,6 @@ while True:
                 insect.state = 'TURN_RIGHT'
             else:
                 insect.state = 'MOVE_FORWARD'
-
     elif insect.state == 'TURN_RIGHT':
         insect.turn_right(60)
         if insect.is_init_pose():
