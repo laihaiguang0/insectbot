@@ -77,7 +77,8 @@ class Insect:
         elif self.curr_leg in [self.leg_left_front, self.leg_right_front]:
             self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, 50)
 
-    def turn_left(self):
+    def turn_left(self, degree):
+        """turn left a degree (0~90)"""
         legs = [self.leg_left_front, self.leg_right_front, self.leg_left_back, self.leg_right_back]
         for leg in legs:
             leg.heartbeat()
@@ -86,14 +87,14 @@ class Insect:
             return
 
         # Turn the body if necessary
-        if self.leg_right_front.thigh_curr_degree == 50 and \
-                self.leg_right_back.thigh_curr_degree == 0 and \
-                self.leg_left_front.thigh_curr_degree == -10 and \
-                self.leg_left_back.thigh_curr_degree == -60:
+        if self.leg_right_front.thigh_curr_degree == 20 + degree and \
+                self.leg_right_back.thigh_curr_degree == -30 + degree and \
+                self.leg_left_front.thigh_curr_degree == 20 - degree and \
+                self.leg_left_back.thigh_curr_degree == -30 - degree:
             for leg in [self.leg_right_front, self.leg_right_back]:
-                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree - 30)
+                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree - degree)
             for leg in [self.leg_left_front, self.leg_left_back]:
-                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree + 30)
+                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree + degree)
             return
 
         # Choose the next leg to move
@@ -108,11 +109,11 @@ class Insect:
 
         # Move one leg
         if self.curr_leg in [self.leg_right_front, self.leg_right_back]:
-            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree + 30)
+            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree + degree)
         elif self.curr_leg in [self.leg_left_front, self.leg_left_back]:
-            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree - 30)
+            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree - degree)
 
-    def turn_right(self):
+    def turn_right(self, degree):
         legs = [self.leg_left_front, self.leg_right_front, self.leg_left_back, self.leg_right_back]
         for leg in legs:
             leg.heartbeat()
@@ -121,14 +122,14 @@ class Insect:
             return
 
         # Turn the body if necessary
-        if self.leg_left_front.thigh_curr_degree == 50 and \
-                self.leg_left_back.thigh_curr_degree == 0 and \
-                self.leg_right_front.thigh_curr_degree == -10 and \
-                self.leg_right_back.thigh_curr_degree == -60:
+        if self.leg_left_front.thigh_curr_degree == 20 + degree and \
+                self.leg_left_back.thigh_curr_degree == -30 + degree and \
+                self.leg_right_front.thigh_curr_degree == 20 - degree and \
+                self.leg_right_back.thigh_curr_degree == -30 - degree:
             for leg in [self.leg_left_front, self.leg_left_back]:
-                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree - 30)
+                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree - degree)
             for leg in [self.leg_right_front, self.leg_right_back]:
-                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree + 30)
+                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree + degree)
             return
 
         # Choose the next leg to move
@@ -143,9 +144,9 @@ class Insect:
 
         # Move one leg
         if self.curr_leg in [self.leg_left_front, self.leg_left_back]:
-            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree + 30)
+            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree + degree)
         elif self.curr_leg in [self.leg_right_front, self.leg_right_back]:
-            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree - 30)
+            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree - degree)
 
     def restore(self):
         """Restore to the initial pose"""
@@ -357,7 +358,7 @@ while True:
                 insect.state = 'MOVE_FORWARD'
 
     elif insect.state == 'TURN_RIGHT':
-        insect.turn_right()
+        insect.turn_right(60)
         if insect.is_init_pose():
             if insect.is_too_close():
                 insect.state = 'TURN_RIGHT'
