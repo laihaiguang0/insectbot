@@ -1,6 +1,7 @@
 from m5stack import *
 from m5ui import *
 from uiflow import *
+from easyIO import *
 import hat
 import unit
 import time
@@ -21,7 +22,17 @@ class Insect:
         self._label_distance = M5TextBox(25, 35, '', lcd.FONT_DejaVu40, 0xFFFFFF, rotate=0)
         self._label_wifi = M5TextBox(25, 85, 'WiFi...', lcd.FONT_DejaVu40, 0xFFFFFF, rotate=0)
         self._label_mqtt = M5TextBox(25, 135, 'MQTT...', lcd.FONT_DejaVu40, 0xFFFFFF, rotate=0)
+        self._label_charging = M5TextBox(12, 174, '', lcd.FONT_Default, 0xFFFFFF, rotate=0)
+        self._label_battery = M5TextBox(12, 205, '', lcd.FONT_Default, 0xFFFFFF, rotate=0)
         self._tof = unit.get(unit.TOF, unit.PORTA)
+
+    def show_charging_state(self):
+        if axp.getChargeState():
+            self._label_charging.setText('Charging')
+        else:
+            self._label_charging.setText('')
+        batt_percent = map_value((axp.getBatVoltage()), 3.7, 4.1, 0, 100)
+        self._label_battery.setText('Battery: {}%'.format(batt_percent))
 
     def show_distance(self):
         self._label_distance.setText(str(self._tof.distance))
@@ -77,8 +88,7 @@ class Insect:
         elif self.curr_leg in [self.leg_left_front, self.leg_right_front]:
             self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, 50)
 
-    def turn_left(self, degree):
-        """turn left a degree (0~90)"""
+    def turn_left(self):
         legs = [self.leg_left_front, self.leg_right_front, self.leg_left_back, self.leg_right_back]
         for leg in legs:
             leg.heartbeat()
@@ -87,14 +97,14 @@ class Insect:
             return
 
         # Turn the body if necessary
-        if self.leg_right_front.thigh_curr_degree == 20 + degree and \
-                self.leg_right_back.thigh_curr_degree == -30 + degree and \
-                self.leg_left_front.thigh_curr_degree == 20 - degree and \
-                self.leg_left_back.thigh_curr_degree == -30 - degree:
+        if self.leg_right_front.thigh_curr_degree == 50 and \
+                self.leg_right_back.thigh_curr_degree == 0 and \
+                self.leg_left_front.thigh_curr_degree == -10 and \
+                self.leg_left_back.thigh_curr_degree == -60:
             for leg in [self.leg_right_front, self.leg_right_back]:
-                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree - degree)
+                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree - 30)
             for leg in [self.leg_left_front, self.leg_left_back]:
-                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree + degree)
+                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree + 30)
             return
 
         # Choose the next leg to move
@@ -109,11 +119,11 @@ class Insect:
 
         # Move one leg
         if self.curr_leg in [self.leg_right_front, self.leg_right_back]:
-            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree + degree)
+            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree + 30)
         elif self.curr_leg in [self.leg_left_front, self.leg_left_back]:
-            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree - degree)
+            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree - 30)
 
-    def turn_right(self, degree):
+    def turn_right(self):
         legs = [self.leg_left_front, self.leg_right_front, self.leg_left_back, self.leg_right_back]
         for leg in legs:
             leg.heartbeat()
@@ -122,14 +132,14 @@ class Insect:
             return
 
         # Turn the body if necessary
-        if self.leg_left_front.thigh_curr_degree == 20 + degree and \
-                self.leg_left_back.thigh_curr_degree == -30 + degree and \
-                self.leg_right_front.thigh_curr_degree == 20 - degree and \
-                self.leg_right_back.thigh_curr_degree == -30 - degree:
+        if self.leg_left_front.thigh_curr_degree == 50 and \
+                self.leg_left_back.thigh_curr_degree == 0 and \
+                self.leg_right_front.thigh_curr_degree == -10 and \
+                self.leg_right_back.thigh_curr_degree == -60:
             for leg in [self.leg_left_front, self.leg_left_back]:
-                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree - degree)
+                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree - 30)
             for leg in [self.leg_right_front, self.leg_right_back]:
-                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree + degree)
+                leg.move_from_to(leg.thigh_curr_degree, leg.thigh_curr_degree + 30)
             return
 
         # Choose the next leg to move
@@ -144,9 +154,9 @@ class Insect:
 
         # Move one leg
         if self.curr_leg in [self.leg_left_front, self.leg_left_back]:
-            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree + degree)
+            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree + 30)
         elif self.curr_leg in [self.leg_right_front, self.leg_right_back]:
-            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree - degree)
+            self.curr_leg.lift_from_to(self.curr_leg.thigh_curr_degree, self.curr_leg.thigh_curr_degree - 30)
 
     def restore(self):
         """Restore to the initial pose"""
@@ -193,6 +203,11 @@ class Insect:
 
     def is_too_close(self):
         if self._tof.distance < 160:
+            return True
+        return False
+
+    def is_too_far(self):
+        if self._tof.distance > 350:
             return True
         return False
 
@@ -330,42 +345,43 @@ insect.reset()
 
 # setScreenColor(0x111155)
 
-# Infinite heart beats
+count_chk_charging = 0
 insect.state = 'MOVE_FORWARD'
 
+# Infinite heart beats
 while True:
     time.sleep_ms(1)
+
+    count_chk_charging += 1
+    if count_chk_charging == 500:
+        insect.show_charging_state()
+        count_chk_charging = 0
 
     if insect.is_still():
         insect.show_distance()
 
-    # Control from remote
-    if insect.remote_ctrl == 'fwd':
-        insect.state = 'MOVE_FORWARD'
-    elif insect.remote_ctrl == 'bwd':
+    if insect.remote_ctrl == 's':
+        continue
+    elif insect.remote_ctrl == 'g':
         pass
-    elif insect.remote_ctrl == 'left':
-        insect.state = 'TURN_LEFT'
-    elif insect.remote_ctrl == 'right':
-        insect.state = 'TURN_RIGHT'
 
-    # Move according to current state
     if insect.state == 'MOVE_FORWARD':
         insect.move_forward()
-        if insect.is_still() and insect.is_too_close():
+        if insect.is_still() and (insect.is_too_close() or insect.is_too_far()):
             insect.state = 'RESTORE'
+
     elif insect.state == 'RESTORE':
         insect.restore()
         if insect.is_init_pose():
-            if insect.is_too_close():
-                insect.state = 'TURN_RIGHT'
-            else:
-                insect.state = 'MOVE_FORWARD'
-    elif insect.state == 'TURN_RIGHT':
-        insect.turn_right(60)
-        if insect.is_init_pose():
-            if insect.is_too_close():
+            if insect.is_too_close() or insect.is_too_far():
                 insect.state = 'TURN_RIGHT'
             else:
                 insect.state = 'MOVE_FORWARD'
 
+    elif insect.state == 'TURN_RIGHT':
+        insect.turn_right()
+        if insect.is_init_pose():
+            if insect.is_too_close() or insect.is_too_far():
+                insect.state = 'TURN_RIGHT'
+            else:
+                insect.state = 'MOVE_FORWARD'
