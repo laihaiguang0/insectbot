@@ -26,8 +26,11 @@ class Insect:
         self._label_battery = M5TextBox(12, 205, '', lcd.FONT_Default, 0xFFFFFF, rotate=0)
         self._tof = unit.get(unit.TOF, unit.PORTA)
 
+    def is_charging(self):
+        return axp.getChargeState()
+
     def show_charging_state(self):
-        if axp.getChargeState():
+        if self.is_charging():
             self._label_charging.setText('Charging')
         else:
             self._label_charging.setText('')
@@ -365,7 +368,10 @@ while True:
     elif insect.remote_ctrl == 'g':
         pass
 
-    if insect.state == 'MOVE_FORWARD':
+    if insect.is_charging():
+        insect.state = 'RESTORE'
+
+    elif insect.state == 'MOVE_FORWARD':
         insect.move_forward()
         if insect.is_still() and (insect.is_too_close() or insect.is_too_far()):
             insect.state = 'RESTORE'
